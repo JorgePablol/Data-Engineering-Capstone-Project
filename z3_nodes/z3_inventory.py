@@ -12,13 +12,13 @@ from base.z3_base import z3Base
 
 class z3Inventory(z3Base):
 
-    def __init__(self, report_type='INVENTORY'):
+    def __init__(self):
         super().__init__()
         load_dotenv(find_dotenv())
 
         self.client: str = ''
         self.provider: str = ''
-        self.report_type: str = report_type
+        self.report_type: str = 'INVENTORY'
         self.clients = ast.literal_eval(os.getenv("CLIENTS"))
 
         self.password_db: str = ''

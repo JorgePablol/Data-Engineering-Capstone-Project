@@ -11,4 +11,12 @@ columns_inventory = [
     'scrapper_rows'
 ]
 
+columns_quality_checks = [
+    'daily',
+    'database_pos_qty',
+    'database_pos_sales',
+    'database_curr_on_hand_qty',
+    'database_rows'
+]
+
 z3_daily = "z3_results"

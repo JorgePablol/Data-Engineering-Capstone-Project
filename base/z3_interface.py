@@ -14,12 +14,10 @@ class z3Interface:
     def extract(self) -> DataFrame:
         pass
 
-    @staticmethod
-    def _transform_quantitative_indicators(df: DataFrame, column: str) -> DataFrame:
+    def _transform_quantitative_indicators(self, df: DataFrame, column: str) -> DataFrame:
         pass
 
-    @staticmethod
-    def _transform_latest_date_comparison(df: DataFrame) -> DataFrame:
+    def _transform_latest_date_comparison(self, df: DataFrame) -> DataFrame:
         pass
 
     def transform(self, z3_df: DataFrame) -> DataFrame:
