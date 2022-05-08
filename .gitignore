@@ -1,4 +1,4 @@
-.env
+*.env
+*.pyc
 .idea
 .ipynb_checkpoints
-z3_results/*
