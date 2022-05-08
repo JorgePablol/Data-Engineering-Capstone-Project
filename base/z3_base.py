@@ -1,24 +1,25 @@
-import datetime as dt
-from typing import Tuple, Dict, List
-import pytz
-from pandas import DataFrame
-import psycopg2
-import pandas as pd
-import logging
-import numpy as np
 import ast
+import datetime as dt
+import logging
 import os
-from dotenv import find_dotenv, load_dotenv
-import pytest
+from typing import Dict, List, Tuple
 
-from base.constants import z3_daily
-from base.constants import columns_quality_checks
+import numpy as np
+import pandas as pd
+import psycopg2
+import pytest
+import pytz
+from dotenv import find_dotenv, load_dotenv
+from pandas import DataFrame
+
+from base.constants import columns_quality_checks, z3_daily
 from base.z3_interface import z3Interface
+from engineering.engineering import (change_column_datatype,
+                                     create_date_yyyy_mm_dd,
+                                     create_date_yyyy_mm_dd_custom)
+from load.sql_queries import (create_table_queries, drop_table_queries,
+                              insert_table_queries_dict)
 from queries.queries import quality_checks
-from engineering.engineering import change_column_datatype
-from engineering.engineering import create_date_yyyy_mm_dd
-from engineering.engineering import create_date_yyyy_mm_dd_custom
-from load.sql_queries import (insert_table_queries_dict, drop_table_queries, create_table_queries)
 
 
 class z3Base(z3Interface):
@@ -48,7 +49,8 @@ class z3Base(z3Interface):
         tz = pytz.timezone('America/Mexico_City')
         today_mx: dt.date = dt.datetime.now(tz=tz).today()
         yesterday: dt.date = (today_mx - dt.timedelta(days=1))
-        thirty_days_ago: dt.date = (yesterday - dt.timedelta(days=10))  # TODO DEFINE IF ITS GOING TO BE 10, 20 OR 30
+        # TODO DEFINE IF ITS GOING TO BE 10, 20 OR 30
+        thirty_days_ago: dt.date = (yesterday - dt.timedelta(days=10))
         yesterday: str = yesterday.strftime(self.DAILY_FORMAT)
         thirty_days_ago: str = thirty_days_ago.strftime(self.DAILY_FORMAT)
 
@@ -142,14 +144,17 @@ class z3Base(z3Interface):
 
         z3_unified: DataFrame = z3_unified.drop_duplicates(keep='first')
 
-        z3_unified_empty: bool = bool(indicator_2_emptiness and indicator_1_emptiness)
+        z3_unified_empty: bool = bool(
+            indicator_2_emptiness and indicator_1_emptiness)
 
         return z3_unified, z3_unified_empty
 
     def extract_and_transform_each_provider(self):
         for self.client in self.clients:
-            provider_and_config_report_id: Dict[str, Dict] = ast.literal_eval(os.getenv(self.client.upper().strip()))
-            provider_and_config_report_id: Dict[str, str] = provider_and_config_report_id.get(self.report_type)
+            provider_and_config_report_id: Dict[str, Dict] = ast.literal_eval(
+                os.getenv(self.client.upper().strip()))
+            provider_and_config_report_id: Dict[str, str] = provider_and_config_report_id.get(
+                self.report_type)
             providers: List[str] = list(provider_and_config_report_id.keys())
 
             self.password_db: str = os.getenv("PASSWORD")
@@ -158,12 +163,15 @@ class z3Base(z3Interface):
                 "CLIENTS_DB2") else os.getenv(
                 "HOST_DB_2")
             for self.provider in providers:
-                self.config_report: int = provider_and_config_report_id.get(self.provider)
+                self.config_report: int = provider_and_config_report_id.get(
+                    self.provider)
                 z3_df, empty_df = self.extract()
                 if not empty_df:
-                    z3_indicators, z3_indicators_empty = self.transform(z3_df=z3_df)
+                    z3_indicators, z3_indicators_empty = self.transform(
+                        z3_df=z3_df)
                     if not z3_indicators_empty:
-                        self.z3_indicators_master = pd.concat([z3_indicators, self.z3_indicators_master])
+                        self.z3_indicators_master = pd.concat(
+                            [z3_indicators, self.z3_indicators_master])
 
         tz = pytz.timezone('America/Mexico_City')
         today_mx: dt.date = dt.datetime.now(tz=tz).today()
@@ -191,7 +199,8 @@ class z3Base(z3Interface):
         self._create_execution_id()
 
     def _create_daily_id(self):
-        self.z3_indicators_master['daily_id'] = self.z3_indicators_master['daily'].copy()
+        self.z3_indicators_master['daily_id'] = self.z3_indicators_master['daily'].copy(
+        )
         change_column_datatype(self.z3_indicators_master, 'daily_id', 'str')
         self.z3_indicators_master['daily_id'] = self.z3_indicators_master['daily_id'].apply(
             lambda x: x.replace('/', ''))
@@ -201,29 +210,37 @@ class z3Base(z3Interface):
         return self.client_ids[client]
 
     def _create_client_id(self):
-        self.z3_indicators_master['client_id'] = self.z3_indicators_master['client'].copy()
-        self.z3_indicators_master['client_id'] = self.z3_indicators_master['client_id'].apply(self._get_client_id)
+        self.z3_indicators_master['client_id'] = self.z3_indicators_master['client'].copy(
+        )
+        self.z3_indicators_master['client_id'] = self.z3_indicators_master['client_id'].apply(
+            self._get_client_id)
         change_column_datatype(self.z3_indicators_master, 'client_id', 'int')
 
     def _get_provider_id(self, provider: str) -> int:
         return self.provider_ids[provider]
 
     def _create_provider_id(self):
-        self.z3_indicators_master['provider_id'] = self.z3_indicators_master['provider'].copy()
-        self.z3_indicators_master['provider_id'] = self.z3_indicators_master['provider_id'].apply(self._get_provider_id)
+        self.z3_indicators_master['provider_id'] = self.z3_indicators_master['provider'].copy(
+        )
+        self.z3_indicators_master['provider_id'] = self.z3_indicators_master['provider_id'].apply(
+            self._get_provider_id)
         change_column_datatype(self.z3_indicators_master, 'provider_id', 'int')
 
     def _get_report_id(self, type_report: str) -> int:
         return self.report_ids[type_report]
 
     def _create_report_id(self):
-        self.z3_indicators_master['report_id'] = self.z3_indicators_master['report_type'].copy()
-        self.z3_indicators_master['report_id'] = self.z3_indicators_master['report_id'].apply(self._get_report_id)
+        self.z3_indicators_master['report_id'] = self.z3_indicators_master['report_type'].copy(
+        )
+        self.z3_indicators_master['report_id'] = self.z3_indicators_master['report_id'].apply(
+            self._get_report_id)
         change_column_datatype(self.z3_indicators_master, 'report_id', 'int')
 
     def _create_execution_id(self):
-        self.z3_indicators_master['execution_id'] = self.z3_indicators_master['execution_date'].copy()
-        change_column_datatype(self.z3_indicators_master, 'execution_id', 'str')
+        self.z3_indicators_master['execution_id'] = self.z3_indicators_master['execution_date'].copy(
+        )
+        change_column_datatype(self.z3_indicators_master,
+                               'execution_id', 'str')
         self.z3_indicators_master['execution_id'] = self.z3_indicators_master['execution_id'].apply(
             lambda x: x.replace('/', ''))
         self.z3_indicators_master['execution_id'] = self.z3_indicators_master['execution_id'].apply(
@@ -231,7 +248,8 @@ class z3Base(z3Interface):
         self.z3_indicators_master['execution_id'] = self.z3_indicators_master['execution_id'].apply(
             lambda x: x.replace('-', ''))
 
-        change_column_datatype(self.z3_indicators_master, 'execution_id', 'int')
+        change_column_datatype(self.z3_indicators_master,
+                               'execution_id', 'int')
 
     def create_star_schema_tables(self):
         self._get_z3_dates_table()
@@ -243,24 +261,32 @@ class z3Base(z3Interface):
 
     def _get_z3_dates_table(self):
         self.z3_dates_table: DataFrame = self.z3_indicators_master.copy()
-        self.z3_dates_table: DataFrame = self.z3_dates_table[['daily_id', 'daily']]
-        self.z3_dates_table: DataFrame = create_date_yyyy_mm_dd(self.z3_dates_table)
-        self.z3_dates_table = self.z3_dates_table.drop_duplicates(subset='daily_id')
+        self.z3_dates_table: DataFrame = self.z3_dates_table[[
+            'daily_id', 'daily']]
+        self.z3_dates_table: DataFrame = create_date_yyyy_mm_dd(
+            self.z3_dates_table)
+        self.z3_dates_table = self.z3_dates_table.drop_duplicates(
+            subset='daily_id')
 
     def _get_z3_reports_table(self):
         self.z3_reports_table: DataFrame = self.z3_indicators_master.copy()
-        self.z3_reports_table = self.z3_reports_table[['report_id', 'report_type']]
-        self.z3_reports_table = self.z3_reports_table.drop_duplicates(subset='report_id')
+        self.z3_reports_table = self.z3_reports_table[[
+            'report_id', 'report_type']]
+        self.z3_reports_table = self.z3_reports_table.drop_duplicates(
+            subset='report_id')
 
     def _get_z3_clients_table(self):
         self.z3_clients_table: DataFrame = self.z3_indicators_master.copy()
         self.z3_clients_table = self.z3_clients_table[['client_id', 'client']]
-        self.z3_clients_table = self.z3_clients_table.drop_duplicates(subset='client_id')
+        self.z3_clients_table = self.z3_clients_table.drop_duplicates(
+            subset='client_id')
 
     def _get_z3_providers_table(self):
         self.z3_providers_table: DataFrame = self.z3_indicators_master.copy()
-        self.z3_providers_table = self.z3_providers_table[['provider_id', 'provider']]
-        self.z3_providers_table = self.z3_providers_table.drop_duplicates(subset='provider_id')
+        self.z3_providers_table = self.z3_providers_table[[
+            'provider_id', 'provider']]
+        self.z3_providers_table = self.z3_providers_table.drop_duplicates(
+            subset='provider_id')
 
     def _get_z3_indicators_table(self):
         self.z3_indicators_table: DataFrame = self.z3_indicators_master.copy()
@@ -282,8 +308,10 @@ class z3Base(z3Interface):
         elif 'scrapper_curr_on_hand_qty' not in list(self.z3_executions_table.columns):
             self.z3_executions_table['scrapper_curr_on_hand_qty'] = 0
 
-        self.z3_executions_table = self.z3_executions_table[['execution_id', 'execution_date']]
-        self.z3_executions_table: DataFrame = create_date_yyyy_mm_dd_custom(self.z3_executions_table, 'execution_date')
+        self.z3_executions_table = self.z3_executions_table[[
+            'execution_id', 'execution_date']]
+        self.z3_executions_table: DataFrame = create_date_yyyy_mm_dd_custom(
+            self.z3_executions_table, 'execution_date')
 
     def perform_load_queries(self) -> DataFrame:
         db_name: str = "z3_results"
@@ -304,25 +332,26 @@ class z3Base(z3Interface):
 
     @staticmethod
     def _create_tables(cur):
-        """Runs the creating tables queries
+        """Runs the creating tables queries.
+
         @cur: database cursor
-        @conn: database connection"""
+        @conn: database connection
+        """
         for query in create_table_queries:
             cur.execute(query)
 
     def _insert_tables(self, cur):
-        """Distributes the information loadad by load_staging_tables function into
-        5 tables
+        """Distributes the information loadad by load_staging_tables function
+        into 5 tables.
+
         @cur: database cursor
-        @conn: database connection"""
+        @conn: database connection
+        """
         for key in list(insert_table_queries_dict.keys()):
             query: str = insert_table_queries_dict[key]
             dataframe: DataFrame = self.z3_tables_dictionary[key]
             for _, row in dataframe.iterrows():
-                try:
-                    cur.execute(query, list(row))
-                except:
-                    pass
+                cur.execute(query, list(row))
 
     @staticmethod
     def drop_tables():
@@ -349,19 +378,24 @@ class z3Base(z3Interface):
         database_result: DataFrame = self._data_quality_query()
         database_pos_qty: float = database_result['database_pos_qty'].sum()
         database_pos_sales: float = database_result['database_pos_sales'].sum()
-        database_curr_on_hand_qty: float = database_result['database_curr_on_hand_qty'].sum()
+        database_curr_on_hand_qty: float = database_result['database_curr_on_hand_qty'].sum(
+        )
         database_rows: float = database_result['database_rows'].sum()
         database_dailys: List[str] = database_result['daily'].unique()
 
-        scrapper_pos_qty: float = self.z3_indicators_table['scrapper_pos_qty'].sum()
-        scrapper_pos_sales: float = self.z3_indicators_table['scrapper_pos_sales'].sum()
+        scrapper_pos_qty: float = self.z3_indicators_table['scrapper_pos_qty'].sum(
+        )
+        scrapper_pos_sales: float = self.z3_indicators_table['scrapper_pos_sales'].sum(
+        )
         scrapper_rows: float = self.z3_indicators_master['scrapper_rows'].sum()
-        scrapper_curr_on_hand_qty: float = self.z3_indicators_table['scrapper_curr_on_hand_qty'].sum()
+        scrapper_curr_on_hand_qty: float = self.z3_indicators_table['scrapper_curr_on_hand_qty'].sum(
+        )
         scrapper_dailys: List[str] = self.z3_dates_table['daily'].unique()
 
         assert database_pos_qty == pytest.approx(scrapper_pos_qty, 0.2)
         assert database_pos_sales == pytest.approx(scrapper_pos_sales, 0.2)
-        assert database_curr_on_hand_qty == pytest.approx(scrapper_curr_on_hand_qty, 0.2)
+        assert database_curr_on_hand_qty == pytest.approx(
+            scrapper_curr_on_hand_qty, 0.2)
         assert database_rows == pytest.approx(scrapper_rows, 0.2)
         assert all(record in scrapper_dailys for record in database_dailys)
 
@@ -391,6 +425,7 @@ class z3Base(z3Interface):
 
     def main(self):
         self.extract_and_transform_each_provider()
-        self.z3_indicators_master.to_csv(f'{z3_daily}/z3_indicators_{self.report_type.lower()}.csv', index=False)
+        self.z3_indicators_master.to_csv(
+            f'{z3_daily}/z3_indicators_{self.report_type.lower()}.csv', index=False)
         self.load()
         self.data_quality_checks()

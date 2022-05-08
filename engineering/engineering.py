@@ -1,6 +1,7 @@
-from pandas import DataFrame
-import pandas as pd
 from typing import NoReturn
+
+import pandas as pd
+from pandas import DataFrame
 
 
 def change_column_datatype(df: DataFrame, column: str, datatype: str) -> NoReturn:

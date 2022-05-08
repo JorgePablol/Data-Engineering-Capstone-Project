@@ -1,13 +1,13 @@
-import os
 import ast
-from dotenv import find_dotenv, load_dotenv
+import os
 
 import pandas as pd
+from dotenv import find_dotenv, load_dotenv
 from pandas import DataFrame
-from queries.queries import inventory
 
 from base.constants import columns_inventory
 from base.z3_base import z3Base
+from queries.queries import inventory
 
 
 class z3Inventory(z3Base):

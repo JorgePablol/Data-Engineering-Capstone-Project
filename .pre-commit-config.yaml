@@ -1,0 +1,41 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+    - repo: https://github.com/timothycrosley/isort
+      rev: 5.9.3
+      hooks:
+        - id: isort
+
+    - repo: https://github.com/asottile/pyupgrade
+      rev: v2.25.0
+      hooks:
+          - id: pyupgrade
+
+    # Automatically transform code to PEP8 standard.
+    - repo: https://github.com/pre-commit/mirrors-autopep8
+      rev: v1.5.7
+      hooks:
+          - id: autopep8
+
+    - repo: https://github.com/myint/docformatter
+      rev: v1.3.1
+      hooks:
+        - id: docformatter
+          args: [ --in-place ]
+
+    - repo: https://github.com/econchick/interrogate
+      rev: 1.4.0
+      hooks:
+        - id: interrogate
+          args: [ --fail-under=85, --ignore-init-method, --ignore-init-module, -v, --ignore-module ]
+
+    - repo: https://github.com/kynan/nbstripout
+      rev: 0.5.0
+      hooks:
+        - id: nbstripout
+
+    - repo: https://github.com/nbQA-dev/nbQA
+      rev: 1.2.3
+      hooks:
+        - id: nbqa-pyupgrade
+        - id: nbqa-isort

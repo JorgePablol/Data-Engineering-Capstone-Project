@@ -1,10 +1,11 @@
-import os
 import ast
+import os
+
 from dotenv import find_dotenv, load_dotenv
 
-from queries.queries import sellout
 from base.constants import columns_sellout
 from base.z3_base import z3Base
+from queries.queries import sellout
 
 
 class z3Sellout(z3Base):

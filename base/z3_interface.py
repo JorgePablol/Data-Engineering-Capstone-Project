@@ -1,5 +1,6 @@
-from pandas import DataFrame
 from typing import Tuple
+
+from pandas import DataFrame
 
 
 class z3Interface:
