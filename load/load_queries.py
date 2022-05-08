@@ -8,26 +8,24 @@ reports_table_drop = "DROP TABLE IF EXISTS reports;"
 clients_table_drop = "DROP TABLE IF EXISTS clients;"
 executions_table_drop = "DROP TABLE IF EXISTS executions;"
 
-
 # CREATE TABLES
 indicators_table_create = ("""
 CREATE TABLE IF NOT EXISTS indicators
-(
-    id SERIAL PRIMARY KEY,
-    client_id INTEGER,
-    report_id INTEGER,
-    provider_id INTEGER,
-    execution_id BIGINT,
-    daily_id BIGINT,
-    scrapper_pos_qty FLOAT,
-    scrapper_pos_sales FLOAT,
-    scrapper_curr_on_hand_qty FLOAT,
-    scrapper_rows FLOAT
-);
-
+    (
+        id SERIAL PRIMARY KEY,
+        client_id INTEGER,
+        report_id INTEGER,
+        provider_id INTEGER,
+        execution_id BIGINT,
+        daily_id BIGINT,
+        scrapper_pos_qty FLOAT,
+        scrapper_pos_sales FLOAT,
+        scrapper_curr_on_hand_qty FLOAT,
+        scrapper_rows FLOAT
+    );
 """)
 
-daily_table_create = """
+daily_table_create = ("""
     CREATE TABLE IF NOT EXISTS daily
     (
         daily_id INTEGER PRIMARY KEY,
@@ -36,33 +34,33 @@ daily_table_create = """
         daily_month INTEGER,
         daily_day INTEGER
     );
-    """
+""")
 
-clients_table_create = """
+clients_table_create = ("""
     CREATE TABLE IF NOT EXISTS clients
     (
         client_id INTEGER PRIMARY KEY,
         client VARCHAR(50)
     );
-    """
+""")
 
-reports_table_create = """
+reports_table_create = ("""
     CREATE TABLE IF NOT EXISTS reports
     (
         report_id INTEGER PRIMARY KEY,
         report_type VARCHAR(50)
     );
-    """
+""")
 
-providers_table_create = """
+providers_table_create = ("""
     CREATE TABLE IF NOT EXISTS providers
     (
         provider_id INTEGER PRIMARY KEY,
         provider VARCHAR(50)
     );
-    """
+""")
 
-executions_table_create = """
+executions_table_create = ("""
     CREATE TABLE IF NOT EXISTS executions
     (
         execution_id BIGINT PRIMARY KEY,
@@ -73,10 +71,10 @@ executions_table_create = """
         execution_hour INTEGER,
         execution_minute INTEGER
     )
-    """
+""")
 
 # INSERT TABLES
-indicators_table_insert = """
+indicators_table_insert = ("""
     INSERT INTO indicators
             (
             client_id,
@@ -90,7 +88,7 @@ indicators_table_insert = """
             scrapper_rows
     )
     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-"""
+""")
 
 daily_table_insert = ("""
     INSERT INTO daily
@@ -149,7 +147,6 @@ executions_table_insert = ("""
     VALUES (%s, %s, %s, %s, %s, %s, %s)
     ON CONFLICT (execution_id) DO NOTHING;
 """)
-
 
 # QUERY LISTS
 

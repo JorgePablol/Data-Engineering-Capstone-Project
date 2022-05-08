@@ -18,5 +18,3 @@ columns_quality_checks = [
     'database_curr_on_hand_qty',
     'database_rows'
 ]
-
-z3_daily = "z3_results"

@@ -1,10 +1,15 @@
 from typing import NoReturn
 
-import pandas as pd
 from pandas import DataFrame
 
 
 def change_column_datatype(df: DataFrame, column: str, datatype: str) -> NoReturn:
+    """Changes the column variable type.
+
+    @param df: the dataframe that has the column.
+    @param column: the column to be modified.
+    @param datatype: the datatype that the column will be converted to.
+    """
     if datatype == "str":
         df[column] = df[column].astype(str)
     elif datatype == "float":
@@ -14,6 +19,11 @@ def change_column_datatype(df: DataFrame, column: str, datatype: str) -> NoRetur
 
 
 def create_date_yyyy_mm_dd(df: DataFrame) -> DataFrame:
+    """Slices the daily column into 3 columns of each of its values.
+
+    @param df: the dataframe that must have a daily column.
+    @return: dataframe the dataframe with brand new 3 columns.
+    """
     df["daily"] = df["daily"].astype(str)
     df["daily"] = df["daily"].apply(lambda x: x.strip())
     df["daily_year"] = df["daily"].copy()
@@ -33,7 +43,13 @@ def create_date_yyyy_mm_dd(df: DataFrame) -> DataFrame:
     return df
 
 
-def create_date_yyyy_mm_dd_custom(df: DataFrame, column: str) -> DataFrame:
+def create_date_yyyy_mm_dd_hh_mins(df: DataFrame, column: str) -> DataFrame:
+    """Slices each value of the execution date column.
+
+    @param df: the dataframe that must be sliced.
+    @param column: the column that must be in the format %Y/%m/%d-%H:%M.
+    @return df: the dataframe with the brand new 5 columns.
+    """
     df[column] = df[column].astype(str)
     df[column] = df[column].apply(lambda x: x.strip())
     df["execution_year"] = df[column].copy()

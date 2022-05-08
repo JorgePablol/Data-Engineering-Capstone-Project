@@ -7,10 +7,12 @@ from pandas import DataFrame
 
 from base.constants import columns_inventory
 from base.z3_base import z3Base
-from queries.queries import inventory
+from extract_and_quality.extract_and_quality_queries import inventory
 
 
 class z3Inventory(z3Base):
+    """Class that performs the etl process for the inventory data from
+    scrappers."""
 
     def __init__(self):
         super().__init__()

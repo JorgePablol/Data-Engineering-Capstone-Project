@@ -5,10 +5,12 @@ from dotenv import find_dotenv, load_dotenv
 
 from base.constants import columns_sellout
 from base.z3_base import z3Base
-from queries.queries import sellout
+from extract_and_quality.extract_and_quality_queries import sellout
 
 
 class z3Sellout(z3Base):
+    """Class that performs the etl process for the sellout data from
+    scrappers."""
 
     def __init__(self):
         super().__init__()
