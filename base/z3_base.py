@@ -43,6 +43,8 @@ class z3Base(z3Interface):
         self.z3_indicators_table: DataFrame = pd.DataFrame()
         self.z3_executions_table: DataFrame = pd.DataFrame()
 
+        self.z3_raw_data: DataFrame = pd.DataFrame()
+
         self.z3_results_password_db: str = os.getenv("RESULTS_PASSWORD")
         self.z3_results_user_db: str = os.getenv("RESULTS_USER_DB")
         self.z3_results_host_db: str = os.getenv("RESULTS_HOST_DB")
@@ -75,6 +77,7 @@ class z3Base(z3Interface):
                         self.z3_indicators_master = pd.concat(
                             [z3_indicators, self.z3_indicators_master])
 
+        self.z3_raw_data.to_csv(f'raw_data_{self.report_type}.csv', index=False)
         tz = pytz.timezone('America/Mexico_City')
         today_mx: dt.date = dt.datetime.now(tz=tz).today()
         today_str: str = today_mx.strftime('%Y/%m/%d-%H:%M')
@@ -103,6 +106,16 @@ class z3Base(z3Interface):
         @return empty_df: a boolean that tells you if the dataframe is empty or not.
         """
         df: DataFrame = self._perform_extract_query()
+        self.z3_raw_data = pd.concat([df, self.z3_raw_data])
+        df['scrapper_rows'] = 1
+        if self.report_type == 'INVENTORY':
+            change_column_datatype(df, 'scrapper_curr_on_hand_qty', 'float')
+        else:
+            change_column_datatype(df, 'scrapper_pos_sales', 'float')
+            change_column_datatype(df, 'scrapper_pos_qty', 'float')
+
+        df: DataFrame = df.groupby('daily').aggregate('sum')
+        df: DataFrame = pd.DataFrame(df.reset_index())
         df['client'] = self.client
         df['provider'] = self.provider
         empty_df: int = df.shape[0]

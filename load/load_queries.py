@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS indicators
 daily_table_create = ("""
     CREATE TABLE IF NOT EXISTS daily
     (
-        daily_id INTEGER PRIMARY KEY,
+        daily_id INTEGER PRIMARY KEY UNIQUE,
         daily VARCHAR(20),
         daily_year INTEGER,
         daily_month INTEGER,
@@ -39,7 +39,7 @@ daily_table_create = ("""
 clients_table_create = ("""
     CREATE TABLE IF NOT EXISTS clients
     (
-        client_id INTEGER PRIMARY KEY,
+        client_id INTEGER PRIMARY KEY UNIQUE,
         client VARCHAR(50)
     );
 """)
@@ -47,7 +47,7 @@ clients_table_create = ("""
 reports_table_create = ("""
     CREATE TABLE IF NOT EXISTS reports
     (
-        report_id INTEGER PRIMARY KEY,
+        report_id INTEGER PRIMARY KEY UNIQUE,
         report_type VARCHAR(50)
     );
 """)
@@ -55,7 +55,7 @@ reports_table_create = ("""
 providers_table_create = ("""
     CREATE TABLE IF NOT EXISTS providers
     (
-        provider_id INTEGER PRIMARY KEY,
+        provider_id INTEGER PRIMARY KEY UNIQUE,
         provider VARCHAR(50)
     );
 """)
@@ -63,7 +63,7 @@ providers_table_create = ("""
 executions_table_create = ("""
     CREATE TABLE IF NOT EXISTS executions
     (
-        execution_id BIGINT PRIMARY KEY,
+        execution_id BIGINT PRIMARY KEY UNIQUE,
         execution_date VARCHAR(40),
         execution_year INTEGER,
         execution_month INTEGER,
