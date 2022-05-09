@@ -7,7 +7,7 @@ from pandas import DataFrame
 
 from base.constants import columns_inventory
 from base.z3_base import z3Base
-from extract_and_quality.extract_and_quality_queries import inventory
+from extract_and_quality_queries.extract_and_quality_queries import inventory
 
 
 class z3Inventory(z3Base):

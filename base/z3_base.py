@@ -13,13 +13,15 @@ from dotenv import find_dotenv, load_dotenv
 from pandas import DataFrame
 
 from base.constants import columns_quality_checks
+from base.constants import columns_results
+from results_query.results_query import results_query
 from base.z3_interface import z3Interface
 from engineering.engineering import (change_column_datatype,
                                      create_date_yyyy_mm_dd,
                                      create_date_yyyy_mm_dd_hh_mins)
-from extract_and_quality.extract_and_quality_queries import quality_checks
-from load.load_queries import (create_table_queries, drop_table_queries,
-                               insert_table_queries_dict)
+from extract_and_quality_queries.extract_and_quality_queries import quality_checks
+from load_queries.load_queries import (create_table_queries, drop_table_queries,
+                                       insert_table_queries_dict)
 
 
 class z3Base(z3Interface):
@@ -92,7 +94,7 @@ class z3Base(z3Interface):
         tz = pytz.timezone('America/Mexico_City')
         today_mx: dt.date = dt.datetime.now(tz=tz).today()
         yesterday: dt.date = (today_mx - dt.timedelta(days=1))
-        thirty_days_ago: dt.date = (yesterday - dt.timedelta(days=30))
+        thirty_days_ago: dt.date = (yesterday - dt.timedelta(days=20))
         yesterday: str = yesterday.strftime(self.DAILY_FORMAT)
         thirty_days_ago: str = thirty_days_ago.strftime(self.DAILY_FORMAT)
 
@@ -160,7 +162,7 @@ class z3Base(z3Interface):
         extreme values.
 
         @param z3_df: the raw data from the database.
-        @return z3_unified: since the data frame is filtered by extreme results for 3 different columns
+        @return z3_unified: since the data frame is filtered by extreme results_query for 3 different columns
             this dataframe corresponds to each result on the columns altogether in one dataframe.
         """
         indicator_2_emptiness: bool = True
@@ -204,7 +206,7 @@ class z3Base(z3Interface):
         @param df: the raw dataframe.
         @param column: the column to be filtered quantitatively
         @return df_fails: the result of the filter that are the possible fails from the website scrapped.
-        @return empty_df: a boolean that shows if there wasnt any extreme results.
+        @return empty_df: a boolean that shows if there wasnt any extreme results_query.
         """
         first_q: float = np.percentile(df[column], 25)
         third_q: float = np.percentile(df[column], 75)
@@ -434,7 +436,7 @@ class z3Base(z3Interface):
 
     @staticmethod
     def _create_tables(cur):
-        """Runs the creating tables extract_and_quality.
+        """Runs the creating tables extract_and_quality_queries.
 
         @cur: database cursor
         @conn: database connection
@@ -457,7 +459,8 @@ class z3Base(z3Interface):
     def data_quality_checks(self):
         """Tests if the data processed corresponds to the data loaded into the
         database."""
-        database_result: DataFrame = self._perform_data_quality_query()
+        database_result: DataFrame = self._perform_read_only_query(query=quality_checks,
+                                                                   columns=columns_quality_checks)
         database_pos_qty: float = database_result['database_pos_qty'].sum()
         database_pos_sales: float = database_result['database_pos_sales'].sum()
         database_curr_on_hand_qty: float = database_result['database_curr_on_hand_qty'].sum(
@@ -481,22 +484,22 @@ class z3Base(z3Interface):
         assert database_rows == pytest.approx(scrapper_rows, 0.2)
         assert all(record in scrapper_dailys for record in database_dailys)
 
-    def _perform_data_quality_query(self) -> DataFrame:
+    def _perform_read_only_query(self, query: str, columns: List[str]) -> DataFrame:
         """Queries the z3_results database, and takes the result into a
         dataframe."""
         db_name: str = "z3_results"
         connection: str = f"host={self.z3_results_host_db} dbname={db_name} user={self.z3_results_user_db} " \
                           f"password={self.z3_results_password_db}"
-        df_quality: DataFrame = pd.DataFrame()
+        df_read: DataFrame = pd.DataFrame()
         conn = psycopg2.connect(connection)
         try:
             conn.set_session(autocommit=True, readonly=True)
             cur = conn.cursor()
-            cur.execute(quality_checks)
+            cur.execute(query)
 
-            df_quality: DataFrame = DataFrame(
+            df_read: DataFrame = DataFrame(
                 cur.fetchall(),
-                columns=columns_quality_checks,
+                columns=columns,
             )
         except psycopg2.Error as e:
             logging.info(e)
@@ -504,7 +507,7 @@ class z3Base(z3Interface):
         finally:
             conn.close()
 
-        return df_quality
+        return df_read
 
     @staticmethod
     def drop_tables():
@@ -528,8 +531,15 @@ class z3Base(z3Interface):
         finally:
             conn.close()
 
+    def display_results(self):
+        """Shows on the jupyter notebook the results of the whole etl process"""
+        z3_results_df: DataFrame = self._perform_read_only_query(query=results_query, columns=columns_results)
+        z3_results_df.to_csv(f"results_output/results_{self.report_type.lower()}.csv", index=False)
+        display(z3_results_df)
+
     def main(self):
         """Directs the execution order of each method."""
         self.extract_and_transform_each_provider_and_client()
         self.load()
         self.data_quality_checks()
+        self.display_results()

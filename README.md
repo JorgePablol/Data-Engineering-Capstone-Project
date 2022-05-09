@@ -17,10 +17,13 @@ In this project I will solve 3 of my most important problems right now first two
     * **load_queries.py**: SQL statements needed to create tables, insert records and drop tables.
 * z3_nodes/:
     * **z3_inventory.py / z3_sellout.py**: An object that inherits the z3_base, and sets up specific paremeters for each type of report.
+* results_output/:
+    * **results_inventory.csv/results_sellout.csv**: The actual final results queried from the z3_results database.
 * **z3.ipynb**: The jupyter notebook where you can execute the etl.
 * **data_dictionary.xlsx**: Is there a more explicit name?
 * **raw_data_INVENTORY.csv**: The raw data extracted from the clients database.
 * **raw_data_SELLOUT.csv**: The raw data extracted from the clients database.
+* **.env**: All the key and secrets needed to access the data sources, and other top secret information like clients and providers.
 
 
 ## Run the program
@@ -29,6 +32,46 @@ In this project I will solve 3 of my most important problems right now first two
 
 ## Step 1: Scope the project and gather the data
 I will use the data from our clients databases,  I will anonymize an example of the raw data extracted from the databases, the data sources which are each database are more than 2 as it's expected in the project rubric. As it's defined in the anonymized datasets, the raw data extracted from the database surpasses 5 million rows on each report type (sellout, inventory). From those rows it summarizes the indicators pos qty, pos sales (sellout) and curr on hand qty (inventory) and groups it into the report daily (the date to which the data corresponds).
+
+
+**Correction**
+The base tables sellout and inventory interact with 4 different tables, the first one is the historical_execution_results that let us improve the query performance, that one is used in the query. Helps me to know what execution ids I must filter by id instead of filtering the sellout by a date range in this case the comparation would be against millions of rows.
+
+The second one is the config reports table that is loaded as a variable for each client, this variable is a copy from the config report table of scrapper database, with only 2 important values first the provider as the key and second the config report id, the config report id let us know what specific report are we talking about, that specific report_id is combined into the extract query, and having that file in local instead of performing another query allows us to save some connections, let's say our database instances usually carry 20 out of 10 connections, what I mean is that they are always overwhelmed. Here's an example:
+
+CLIENT_1="{
+    'SELLOUT':{
+        'PROVIDER': 18,
+        'PROVIDER: 17,
+        'PROVIDER': 13,
+        'PROVIDERY': 14
+    }"
+
+
+The other two important tables are hidden into the .env file, there I show the client name and client_id, provider name and provider_id, to correlate the provider name, and client name into the actual report that is being queried, the value of the dictionary assigns an id for each provider/client. So I know to which client and provider each report belongs to.
+
+That combination happens in the extract function in z3_base.py file.
+
+Example of the tables/dictionaries:
+ 
+PROVIDER_IDS="{
+    'PROVIDER': 1,
+    'PROVIDER': 2,
+    'PROVIDER': 3,
+    'PROVIDER': 4,
+    'PROVIDER': 5,
+
+
+CLIENT_IDS="{
+    'CLIENT': 1,
+    'CLIENT': 2,
+    'CLIENT': 3,
+    'CLIENT': 4,
+    'CLIENT': 5,
+    'CLIENT': 6,
+    'CLIENT': 7
+}"
+
 
 ## Step 2: Explore and asses the data
 As I said in the project scope the two most important problems for us are when indicators have an extremely high value (duplicated) or extremely low values, I will solve this by taking the outlier limits that are calculated by substracting inter quartile range * 1.5 to quartile 1 or adding it to quartile 3, but instead I will use inter quartil range * 3, because I dont need to find data variability outliers instead only extreme ones.

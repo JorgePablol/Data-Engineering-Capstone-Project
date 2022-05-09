@@ -5,7 +5,7 @@ from dotenv import find_dotenv, load_dotenv
 
 from base.constants import columns_sellout
 from base.z3_base import z3Base
-from extract_and_quality.extract_and_quality_queries import sellout
+from extract_and_quality_queries.extract_and_quality_queries import sellout
 
 
 class z3Sellout(z3Base):

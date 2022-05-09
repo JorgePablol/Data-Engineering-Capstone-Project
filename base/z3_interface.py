@@ -22,6 +22,10 @@ class z3Interface:
         user only."""
         pass
 
+    def display_results(self):
+        """Shows on the jupyter notebook the results_query of the whole etl process"""
+        pass
+
     def main(self):
         """Starts the whole ETL process."""
         pass

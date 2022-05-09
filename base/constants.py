@@ -16,3 +16,13 @@ columns_quality_checks = [
     'database_curr_on_hand_qty',
     'database_rows'
 ]
+
+columns_results = [
+    'client_id',
+    'provider_id',
+    'daily',
+    'scrapper_pos_qty',
+    'scrapper_pos_sales',
+    'scrapper_curr_on_hand_qty',
+    'scrapper_rows'
+]
